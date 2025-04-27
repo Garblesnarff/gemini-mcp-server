@@ -9,12 +9,14 @@ A Model Context Protocol (MCP) server that enables Claude Desktop to generate im
 - Customizable image generation parameters
 - Integration with Claude Desktop's MCP server system
 - Detailed logging and debugging capabilities
+- Docker support for easy deployment and sharing
 
 ## 📋 Requirements
 
 - Node.js 16.x or higher
 - Claude Desktop application
 - Google Gemini API key ([Get one here](https://ai.google.dev/))
+- Docker (optional, for containerized deployment)
 
 ## 🚀 Installation
 
@@ -39,6 +41,18 @@ npm install gemini-mcp-server
 
 # Run the setup wizard
 npx gemini-mcp-setup
+```
+
+### Docker Installation
+
+You can also run the Gemini MCP server using Docker:
+
+```bash
+# Build the Docker image
+docker build -t gemini-mcp-server .
+
+# Run the Docker container
+docker run -e GEMINI_API_KEY="your-api-key" -e OUTPUT_DIR="/app/output" -v /path/on/host:/app/output gemini-mcp-server
 ```
 
 ## ⚙️ Setup
@@ -137,6 +151,48 @@ Edit your `~/.config/claude/claude_desktop_config.json` file to add the Gemini M
 }
 ```
 
+## 🐳 Docker Deployment
+
+This MCP server includes a Dockerfile for easy deployment and sharing. The Docker image is configured to:
+
+- Use Node.js 16 Alpine as a lightweight base
+- Install all necessary dependencies
+- Set up a default output directory at `/app/output`
+- Allow configuration via environment variables
+
+### Building the Docker Image
+
+```bash
+docker build -t gemini-mcp-server .
+```
+
+### Running with Docker
+
+```bash
+docker run \
+  -e GEMINI_API_KEY="your-api-key" \
+  -e OUTPUT_DIR="/app/output" \
+  -e DEBUG="false" \
+  -v /path/on/host:/app/output \
+  gemini-mcp-server
+```
+
+### Environment Variables for Docker
+
+When running the Docker container, you can configure the server using these environment variables:
+
+- `GEMINI_API_KEY`: Your Google Gemini API key (required)
+- `OUTPUT_DIR`: Directory to save generated images (default: `/app/output`)
+- `DEBUG`: Enable debug logging (default: `false`)
+
+### Using with Claude Desktop
+
+When using the Docker container with Claude Desktop, you'll need to:
+
+1. Ensure the container is running
+2. Configure Claude Desktop to connect to the containerized server
+3. Map the output directory to a location accessible by Claude
+
 ## 📚 API Documentation
 
 ### Command Line Interface
@@ -195,6 +251,13 @@ Options:
 #### Error: "Method not found"
 
 This usually means Claude is trying to call a method that the MCP server doesn't support. Check the logs to see what method was requested.
+
+#### Docker-specific issues
+
+1. Ensure the container has proper network connectivity
+2. Check if volume mounts are correctly configured
+3. Verify environment variables are properly set
+4. Review container logs with `docker logs [container-id]`
 
 ### Debug Mode
 
