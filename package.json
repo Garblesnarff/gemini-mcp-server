@@ -1,0 +1,43 @@
+{
+  "name": "gemini-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Claude Desktop that generates images using Google's Gemini AI",
+  "main": "src/index.js",
+  "bin": {
+    "gemini-mcp-server": "./bin/gemini-mcp-server.js",
+    "gemini-mcp-setup": "./bin/setup.js"
+  },
+  "scripts": {
+    "start": "node ./bin/gemini-mcp-server.js",
+    "setup": "node ./bin/setup.js",
+    "postinstall": "node ./bin/postinstall.js"
+  },
+  "keywords": [
+    "claude",
+    "mcp",
+    "gemini",
+    "ai",
+    "image-generation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.1.3",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "conf": "^10.2.0",
+    "figlet": "^1.7.0",
+    "inquirer": "^8.2.6"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Garblesnarff/gemini-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Garblesnarff/gemini-mcp-server/issues"
+  },
+  "homepage": "https://github.com/Garblesnarff/gemini-mcp-server#readme"
+}
