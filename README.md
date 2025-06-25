@@ -1,273 +1,157 @@
-# Gemini MCP Server for Claude Desktop
+# Gemini MCP Server with Smart Tool Intelligence
 
-A Model Context Protocol (MCP) server that enables Claude Desktop to generate images using Google's Gemini AI models.
+Welcome to the Gemini MCP Server, a cutting-edge implementation of the Model Context Protocol (MCP) that integrates advanced Smart Tool Intelligence. This server is designed to provide powerful AI-driven tools, capable of self-learning and adapting to user preferences and contexts, making interactions more intuitive and efficient.
 
-## 🌟 Features
+## 🚀 Features
 
-- Generate images directly from Claude Desktop using Google's Gemini models
-- Easy setup wizard for configuration
-- Customizable image generation parameters
-- Integration with Claude Desktop's MCP server system
-- Detailed logging and debugging capabilities
+*   **7 AI-Powered Tools:**
+    *   `generate_image`: Generate images from text prompts.
+    *   `gemini-edit-image`: Edit existing images based on instructions.
+    *   `gemini-chat`: Engage in conversations with Gemini AI.
+    *   `gemini-transcribe-audio`: Transcribe audio files to text.
+    *   `gemini-code-execute`: Execute Python code in a sandbox.
+    *   `gemini-analyze-video`: Analyze video content for summaries, transcripts, and more.
+    *   `gemini-analyze-image`: Analyze images for content, objects, and text.
+*   **Smart Tool Intelligence System:**
+    *   **Self-Learning Capabilities:** Learns from successful interactions to enhance future prompts.
+    *   **Pattern Recognition:** Identifies common usage patterns and user preferences.
+    *   **Prompt Enhancement:** Automatically refines prompts for better AI model performance.
+    *   **Context Detection:** Understands the context of a request to apply relevant intelligence.
+    *   **Verbatim Mode:** Special context for audio transcriptions that ensures word-for-word output.
+*   **Internal Storage:** JSON-based preference management system for persistent learning.
+*   **Enterprise Architecture:** Modular design with clear separation of concerns, promoting maintainability and extensibility.
 
-## 📋 Requirements
+## ⚙️ Setup and Installation
 
-- Node.js 16.x or higher
-- Claude Desktop application
-- Google Gemini API key ([Get one here](https://ai.google.dev/))
+To get the Gemini MCP Server up and running, follow these steps:
 
-## 🚀 Installation
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Garblesnarff/gemini-mcp-server.git
+    cd gemini-mcp-server
+    ```
+2.  **Install Dependencies:**
+    Navigate to the project root directory and install the necessary Node.js packages:
+    ```bash
+    npm install
+    ```
+3.  **Configure Gemini API Key:**
+    The server requires a Google Gemini API key to interact with the Gemini models.
+    *   Obtain your API key from the [Google AI Studio](https://aistudio.google.com/app/apikey).
+    *   Create a file named `.env` in the root directory of the project.
+    *   Add your API key to the `.env` file in the following format:
+        ```
+        GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+        ```
+    *   **Important:** Do not commit your `.env` file to version control. It is already included in `.gitignore`.
 
-### Global Installation (Recommended)
+## ▶️ Running the Server
 
-```bash
-npm install -g gemini-mcp-server
+The Gemini MCP Server communicates via standard input/output (stdin/stdout) as per the MCP specification.
 
-# Run the setup wizard
-npx gemini-mcp-setup
-```
-
-### Local Installation
-
-```bash
-# Create a directory for the server
-mkdir gemini-mcp-server
-cd gemini-mcp-server
-
-# Install locally
-npm install gemini-mcp-server
-
-# Run the setup wizard
-npx gemini-mcp-setup
-```
-
-### Docker Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Garblesnarff/gemini-mcp-server.git
-cd gemini-mcp-server
-
-# Build the Docker image
-docker build -t gemini-mcp-server .
-
-# Run the container
-docker run -e GEMINI_API_KEY=your_api_key -e OUTPUT_DIR=/app/output -v $(pwd)/output:/app/output gemini-mcp-server
-```
-
-This creates a Docker container with the MCP server and mounts a local output directory to store generated images.
-
-## ⚙️ Setup
-
-The setup wizard will guide you through the configuration process:
-
-1. Enter your Google Gemini API key
-2. Specify the directory for saving generated images
-3. Configure logging and model settings
-4. Automatically create a wrapper script for Claude Desktop
-5. Update your Claude Desktop configuration
-
-If you prefer manual setup, see the [Manual Configuration](#manual-configuration) section below.
-
-## 🎨 Using the Gemini MCP Server
-
-Once installed and configured, restart Claude Desktop to enable the Gemini MCP server. Then:
-
-1. Start a conversation with Claude
-2. Ask Claude to generate an image for you, for example:
-   - "Generate an image of a mountain landscape at sunset"
-   - "Create a picture of a futuristic city with flying cars"
-   - "Make an illustration of a cat playing piano"
-
-Claude will call the Gemini API to generate the image and provide you with the path to the saved image file.
-
-### Advanced Options
-
-You can customize the image generation with additional parameters:
-
-- **Style**: Specify a style like "realistic", "artistic", "minimalistic", etc.
-- **Temperature**: Control the creativity/randomness of the generation (0.0-1.0)
-
-Example: "Generate an image of a cyberpunk city with neon lights in a realistic style with temperature 0.7"
-
-## 🔧 Manual Configuration
-
-If you prefer not to use the setup wizard, follow these steps:
-
-### 1. Create Configuration File
-
-Create a JSON configuration file with your settings:
-
-```json
-{
-  "apiKey": "YOUR_GEMINI_API_KEY_HERE",
-  "outputDir": "/path/to/your/output/directory",
-  "debug": true,
-  "modelOptions": {
-    "model": "gemini-2.0-flash-exp",
-    "temperature": 0.4
-  }
-}
-```
-
-### 2. Create Wrapper Script
-
-Create a bash script to run the server:
+To start the server:
 
 ```bash
-#!/bin/bash
-# Set environment variables
-export GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
-export OUTPUT_DIR="/path/to/your/output/directory"
-export DEBUG="true"
-
-# Execute the server
-exec "$(which node)" "$(npm root -g)/gemini-mcp-server/bin/gemini-mcp-server.js"
+node gemini-server.js
 ```
 
-Make the script executable:
+Once running, the server will listen for MCP requests on `stdin` and send responses to `stdout`.
 
-```bash
-chmod +x gemini-mcp-wrapper.sh
+## 🧪 Testing and Examples
+
+You can test the server's functionality using the provided test scripts or by integrating it with an MCP client.
+
+*   **Basic Test:**
+    ```bash
+    node test-internal-storage.js
+    ```
+*   **Tool Intelligence Test:**
+    ```bash
+    node test-tool-intelligence.js
+    ```
+*   **Full Tool Intelligence Test:**
+    ```bash
+    node test-tool-intelligence-full.js
+    ```
+*   **Verbatim Mode Test:**
+    ```bash
+    node test-verbatim-mode.js
+    ```
+
+### Using Verbatim Mode for Transcriptions
+
+When using the audio transcription tool, you can get exact word-for-word transcriptions by setting the context to "verbatim":
+
+```javascript
+// For exact transcriptions including all utterances, pauses, and filler words
+const result = await gemini_transcribe_audio({
+  file_path: "/path/to/audio.mp3",
+  context: "verbatim"
+});
 ```
 
-### 3. Update Claude Desktop Configuration
+Without verbatim mode, the Tool Intelligence system will enhance prompts based on learned preferences, which may result in more concise or summarized transcriptions.
 
-Edit your `~/.config/claude/claude_desktop_config.json` file to add the Gemini MCP server:
+## 📚 Architecture Overview
 
-```json
-{
-  "mcpServers": {
-    "gemini-image": {
-      "command": "/bin/bash",
-      "args": [
-        "-c",
-        "/path/to/your/gemini-mcp-wrapper.sh"
-      ],
-      "env": {
-        "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY_HERE",
-        "DEBUG": "true"
-      }
-    }
-  }
-}
+The server is built with a modular and extensible architecture:
+
+```mermaid
+graph TD
+    subgraph MCP Server
+        A[src/server.js] --> B{Request Router};
+    end
+
+    subgraph Tool Layer
+        B --> C[src/tools/index.js];
+        C --> D1[ChatTool];
+        C --> D2[ImageGenerationTool];
+        C --> D3[... other tools];
+    end
+
+    subgraph Shared Services
+        E[src/intelligence/index.js] --> F((Intelligence Singleton));
+        G[src/gemini/gemini-service.js] --> H((Gemini Service));
+    end
+
+    subgraph Base Class
+        I[src/tools/base-tool.js];
+    end
+
+    C -- passes instances to --> D1;
+    C -- passes instances to --> D2;
+    C -- passes instances to --> D3;
+
+    D1 -- inherits from --> I;
+    D2 -- inherits from --> I;
+    D3 -- inherits from --> I;
+
+    I -- uses --> F;
+    I -- uses --> H;
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#ccf,stroke:#333,stroke-width:2px
+    style D1 fill:#ccf,stroke:#333,stroke-width:2px
+    style D2 fill:#ccf,stroke:#333,stroke-width:2px
+    style D3 fill:#ccf,stroke:#333,stroke-width:2px
+    style E fill:#cfc,stroke:#333,stroke-width:2px
+    style F fill:#cfc,stroke:#333,stroke-width:2px
+    style G fill:#cfc,stroke:#333,stroke-width:2px
+    style H fill:#cfc,stroke:#333,stroke-width:2px
+    style I fill:#fcf,stroke:#333,stroke-width:2px
 ```
 
-## 📚 API Documentation
+*   **`src/server.js`**: The main entry point, handling MCP protocol communication and routing requests to appropriate handlers.
+*   **`src/tools/index.js`**: The central tool registry and dispatcher. It initializes all tools and provides methods for listing and calling them.
+*   **`src/tools/base-tool.js`**: An abstract base class that all specific tools extend. It provides common properties and enforces the `execute` method.
+*   **`src/intelligence/index.js`**: The singleton instance of the Smart Tool Intelligence System. It coordinates context detection, prompt enhancement, and pattern learning, ensuring a consistent learning state across all tools.
+*   **`src/gemini/gemini-service.js`**: A service layer that encapsulates all interactions with the Google Gemini API, abstracting away the complexities of model configuration and content generation.
 
-### Command Line Interface
+## 🤝 Contributing
 
-```
-gemini-mcp-server [options]
-```
+We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to set up your development environment, adhere to coding standards, and submit changes.
 
-Options:
-- `-k, --api-key <key>`: Google Gemini API key
-- `-o, --output-dir <dir>`: Directory to save generated images
-- `-d, --debug`: Enable debug logging
-- `-c, --config <path>`: Path to custom configuration file
-- `-r, --reset-config`: Reset configuration to defaults
-- `-v, --version`: Display version information
+## 📄 License
 
-### Environment Variables
-
-- `GEMINI_API_KEY`: Your Google Gemini API key
-- `OUTPUT_DIR`: Directory to save generated images
-- `DEBUG`: Enable debug logging (`true` or `false`)
-- `LOG_LEVEL`: Set log level (`ERROR`, `WARN`, `INFO`, or `DEBUG`)
-- `GEMINI_LOG_FILE`: Custom log file path
-
-### Configuration Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `apiKey` | Google Gemini API key | (required) |
-| `outputDir` | Directory to save generated images | `~/Claude/gemini-images` |
-| `debug` | Enable debug logging | `false` |
-| `modelOptions.model` | Gemini model to use | `gemini-2.0-flash-exp` |
-| `modelOptions.temperature` | Control creativity/randomness | `0.4` |
-| `modelOptions.topK` | Top-k sampling parameter | `32` |
-| `modelOptions.topP` | Top-p sampling parameter | `1` |
-| `modelOptions.maxOutputTokens` | Maximum output tokens | `8192` |
-
-## 🐳 Docker Usage
-
-The Gemini MCP Server can be run as a Docker container for easier deployment and portability. The Dockerfile is included in the repository.
-
-### Building the Docker Image
-
-```bash
-docker build -t gemini-mcp-server .
-```
-
-### Running the Container
-
-```bash
-docker run -e GEMINI_API_KEY=your_api_key -e OUTPUT_DIR=/app/output -v $(pwd)/output:/app/output gemini-mcp-server
-```
-
-### Environment Variables for Docker
-
-When running the Docker container, you can set the following environment variables:
-
-- `GEMINI_API_KEY`: Your Google Gemini API key (required)
-- `OUTPUT_DIR`: Directory inside the container to save generated images (default: `/app/output`)
-- `DEBUG`: Enable debug logging (default: `false`)
-- `LOG_LEVEL`: Set log level (default: `INFO`)
-
-### Volume Mounting
-
-To persist generated images, mount a volume to the output directory:
-
-```bash
-docker run -e GEMINI_API_KEY=your_api_key -v $(pwd)/output:/app/output gemini-mcp-server
-```
-
-This mounts the `output` directory from your current location to the container's output directory.
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### Server doesn't start or Claude can't connect to it
-
-1. Check the log file at `~/Claude/logs/gemini-image-mcp.log`
-2. Verify your API key is correct
-3. Ensure all directories exist and have proper permissions
-4. Restart Claude Desktop
-
-#### Images aren't being generated
-
-1. Verify your Google Gemini API key has the correct permissions
-2. Check if the output directory exists and is writable
-3. Examine the logs for specific error messages
-4. Try a different prompt or model
-
-#### Error: "Method not found"
-
-This usually means Claude is trying to call a method that the MCP server doesn't support. Check the logs to see what method was requested.
-
-### Debug Mode
-
-Enable debug mode for more detailed logs:
-
-```bash
-npx gemini-mcp-server --debug
-```
-
-Or set the environment variable:
-
-```bash
-export DEBUG=true
-npx gemini-mcp-server
-```
-
-## 📝 License
-
-MIT
-
-## 🙏 Acknowledgements
-
-- [Model Context Protocol](https://modelcontextprotocol.io/) for the MCP specification
-- [Google Generative AI](https://ai.google.dev/) for the Gemini API
-- All contributors to this project
+This project is licensed under the [MIT License](LICENSE).
