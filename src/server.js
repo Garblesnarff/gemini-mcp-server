@@ -100,7 +100,19 @@ function createServer(options = {}) {
       else if (method === 'tools/call') {
         const { name, arguments: args } = params;
         
-        if (name === 'generate_image' && args && args.prompt) {
+        if (name === 'generate_image') {
+          if (!args || !args.prompt || typeof args.prompt !== 'string' || args.prompt.trim() === '') {
+            sendResponse({
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32602, // Invalid params
+                message: 'Missing or invalid "prompt" argument for generate_image tool. Prompt must be a non-empty string.'
+              }
+            });
+            return;
+          }
+          
           try {
             logger.info(`Generating image: "${args.prompt}"`);
             

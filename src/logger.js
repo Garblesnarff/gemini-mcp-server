@@ -1,7 +1,8 @@
 /**
  * Logger module for Gemini MCP Server
  */
-const fs = require('fs');
+const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const os = require('os');
 
@@ -9,8 +10,8 @@ const os = require('os');
 const defaultLogDir = path.join(os.homedir(), 'Claude', 'logs');
 
 // Ensure log directory exists
-if (!fs.existsSync(defaultLogDir)) {
-  fs.mkdirSync(defaultLogDir, { recursive: true });
+if (!fsSync.existsSync(defaultLogDir)) {
+  fsSync.mkdirSync(defaultLogDir, { recursive: true });
 }
 
 // Log file path
@@ -45,8 +46,10 @@ function log(level, message) {
   // Write to stderr for visibility
   console.error(logMessage);
   
-  // Append to log file
-  fs.appendFileSync(logFile, logMessage + '\n');
+  // Append to log file asynchronously
+  fs.appendFile(logFile, logMessage + '\n').catch(err => {
+    console.error(`Failed to write to log file: ${err.message}`);
+  });
 }
 
 module.exports = {
@@ -57,8 +60,8 @@ module.exports = {
   setLogFile: (filePath) => {
     logFile = filePath;
     const logDir = path.dirname(filePath);
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
+    if (!fsSync.existsSync(logDir)) {
+      fsSync.mkdirSync(logDir, { recursive: true });
     }
   },
 };
