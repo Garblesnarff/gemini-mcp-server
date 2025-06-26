@@ -59,12 +59,12 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 
 ```json
 {
-  "mcpServers": {
-    "gemini": {
-      "command": "node",
-      "args": ["/path/to/gemini-mcp-server/gemini-server.js"],
-      "env": {
-        "GEMINI_API_KEY": "your_api_key_here"
+  \"mcpServers\": {
+    \"gemini\": {
+      \"command\": \"node\",
+      \"args\": [\"/path/to/gemini-mcp-server/gemini-server.js\"],
+      \"env\": {
+        \"GEMINI_API_KEY\": \"your_api_key_here\"
       }
     }
   }
@@ -84,21 +84,21 @@ Generate images from text descriptions using Gemini 2.0 Flash.
 **Example:**
 ```javascript
 {
-  "prompt": "A serene mountain landscape at sunset with vibrant colors",
-  "context": "artistic"
+  \"prompt\": \"A serene mountain landscape at sunset with vibrant colors\",
+  \"context\": \"artistic\"
 }
 ```
 
 **Returns:**
 ```javascript
 {
-  "content": [{
-    "type": "text",
-    "text": "Generated a beautiful mountain landscape image."
+  \"content\": [{
+    \"type\": \"text\",
+    \"text\": \"Generated a beautiful mountain landscape image.\"
   }, {
-    "type": "image", 
-    "data": "base64_image_data",
-    "mimeType": "image/png"
+    \"type\": \"image\", 
+    \"data\": \"base64_image_data\",
+    \"mimeType\": \"image/png\"
   }]
 }
 ```
@@ -115,9 +115,9 @@ Edit existing images using natural language instructions.
 **Example:**
 ```javascript
 {
-  "image_path": "/path/to/image.jpg",
-  "edit_instruction": "Add shooting stars to the night sky",
-  "context": "artistic"
+  \"image_path\": \"/path/to/image.jpg\",
+  \"edit_instruction\": \"Add shooting stars to the night sky\",
+  \"context\": \"artistic\"
 }
 ```
 
@@ -132,8 +132,8 @@ Interactive conversations with Gemini AI that learns your preferences.
 **Example:**
 ```javascript
 {
-  "message": "Explain quantum computing in simple terms",
-  "context": "consciousness"  // Will apply academic rigor enhancement
+  \"message\": \"Explain quantum computing in simple terms\",
+  \"context\": \"consciousness\"  // Will apply academic rigor enhancement
 }
 ```
 
@@ -144,28 +144,28 @@ Convert audio files to text with Smart Tool Intelligence enhancement.
 **Parameters:**
 - `file_path` (string, required) - Path to audio file (MP3, WAV, FLAC, AAC, OGG, WEBM, M4A)
 - `language` (string, optional) - Language hint for better accuracy
-- `context` (string, optional) - Use "verbatim" for exact word-for-word transcription
+- `context` (string, optional) - Use \"verbatim\" for exact word-for-word transcription
 - `preserve_spelled_acronyms` (boolean, optional) - Keep U-R-L instead of URL
 
 **Example (Standard):**
 ```javascript
 {
-  "file_path": "/path/to/audio.mp3",
-  "language": "en"
+  \"file_path\": \"/path/to/audio.mp3\",
+  \"language\": \"en\"
 }
 ```
 
 **Example (Verbatim Mode):**
 ```javascript
 {
-  "file_path": "/path/to/audio.mp3",
-  "context": "verbatim",  // Gets exact word-for-word transcription
-  "preserve_spelled_acronyms": true
+  \"file_path\": \"/path/to/audio.mp3\",
+  \"context\": \"verbatim\",  // Gets exact word-for-word transcription
+  \"preserve_spelled_acronyms\": true
 }
 ```
 
 **Verbatim Mode Features:**
-- Captures all "um", "uh", "like", repeated words
+- Captures all \"um\", \"uh\", \"like\", repeated words
 - Preserves emotional expressions: [laughs], [sighs], [clears throat]
 - Maintains original punctuation and sentence structure
 - No summarization or cleanup
@@ -181,8 +181,8 @@ Execute Python code in a secure sandbox environment.
 **Example:**
 ```javascript
 {
-  "code": "import pandas as pd\ndata = {'x': [1,2,3], 'y': [4,5,6]}\ndf = pd.DataFrame(data)\nprint(df.describe())",
-  "context": "code"
+  \"code\": \"import pandas as pd\\ndata = {'x': [1,2,3], 'y': [4,5,6]}\\ndf = pd.DataFrame(data)\\nprint(df.describe())\",
+  \"context\": \"code\"
 }
 ```
 
@@ -192,14 +192,14 @@ Analyze video content for summaries, transcripts, and detailed insights.
 
 **Parameters:**
 - `file_path` (string, required) - Path to video file (MP4, MOV, AVI, WEBM, MKV, FLV)
-- `analysis_type` (string, optional) - "summary", "transcript", "objects", "detailed", "custom"
+- `analysis_type` (string, optional) - \"summary\", \"transcript\", \"objects\", \"detailed\", \"custom\"
 - `context` (string, optional) - Context for enhancement
 
 **Example:**
 ```javascript
 {
-  "file_path": "/path/to/video.mp4",
-  "analysis_type": "detailed"
+  \"file_path\": \"/path/to/video.mp4\",
+  \"analysis_type\": \"detailed\"
 }
 ```
 
@@ -209,14 +209,14 @@ Extract detailed information from images including objects, text, and descriptio
 
 **Parameters:**
 - `file_path` (string, required) - Path to image file (JPEG, PNG, WebP, HEIC, HEIF, BMP, GIF)
-- `analysis_type` (string, optional) - "summary", "objects", "text", "detailed", "custom"
+- `analysis_type` (string, optional) - \"summary\", \"objects\", \"text\", \"detailed\", \"custom\"
 - `context` (string, optional) - Context for enhancement
 
 **Example:**
 ```javascript
 {
-  "file_path": "/path/to/image.jpg",
-  "analysis_type": "objects"
+  \"file_path\": \"/path/to/image.jpg\",
+  \"analysis_type\": \"objects\"
 }
 ```
 
@@ -268,7 +268,7 @@ class PromptEnhancer {
   enhancePrompt(originalPrompt, context, toolName) {
     // Apply context-specific enhancements
     const enhancement = this.getEnhancementForContext(context);
-    return `${originalPrompt}\n\n${enhancement}`;
+    return `${originalPrompt}\\n\\n${enhancement}`;
   }
 }
 
@@ -336,10 +336,10 @@ node test-verbatim-mode.js
 
 ```bash
 # Test image generation
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"generate_image","arguments":{"prompt":"A cute robot reading a book"}}}' | node gemini-server.js
+echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"generate_image\",\"arguments\":{\"prompt\":\"A cute robot reading a book\"}}}' | node gemini-server.js
 
 # Test chat with consciousness context
-echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"gemini-chat","arguments":{"message":"What is consciousness?","context":"consciousness"}}}' | node gemini-server.js
+echo '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"gemini-chat\",\"arguments\":{\"message\":\"What is consciousness?\",\"context\":\"consciousness\"}}}' | node gemini-server.js
 ```
 
 ## 📊 Performance & Limits
@@ -453,14 +453,14 @@ class MyNewTool extends BaseTool {
 
 ### Common Issues
 
-**"Missing GEMINI_API_KEY" Error**
+**\"Missing GEMINI_API_KEY\" Error**
 ```bash
 # Ensure .env file exists and contains your API key
 cp .env.example .env
 # Edit .env and add: GEMINI_API_KEY=your_key_here
 ```
 
-**"File not found" Errors**
+**\"File not found\" Errors**
 ```bash
 # Ensure file paths are absolute and files exist
 # Check file permissions and formats
@@ -539,4 +539,4 @@ Built with:
 
 ---
 
-**Ready to experience the future of MCP servers?** [Get started now](#quick-start) and watch your AI tools become smarter with every interaction! 🚀
+**Ready to experience the future of MCP servers?** [Get started now](#quick-start) and watch your AI tools become smarter with every interaction! 🚀"

@@ -1,0 +1,10 @@
+{
+  "gemini": {
+    "command": "/bin/bash",
+    "args": ["-c", "/Users/rob/Claude/mcp-servers/gemini-mcp-server/gemini-wrapper.sh"],
+    "env": {
+      "GEMINI_API_KEY": "AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk",
+      "DEBUG": "true"
+    }
+  }
+}
