@@ -2,6 +2,10 @@
 
 Welcome to the Gemini MCP Server, the **first MCP server with Smart Tool Intelligence** - a revolutionary self-learning system that adapts to your preferences and improves over time. This comprehensive platform provides 7 AI-powered tools with automatic prompt enhancement and context awareness.
 
+<a href="https://glama.ai/mcp/servers/@Garblesnarff/gemini-mcp-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@Garblesnarff/gemini-mcp-server/badge" alt="Gemini Server for Claude Desktop MCP server" />
+</a>
+
 ## 🚀 Features Overview
 
 ### 🤖 7 AI-Powered Tools
@@ -539,4 +543,4 @@ Built with:
 
 ---
 
-**Ready to experience the future of MCP servers?** [Get started now](#quick-start) and watch your AI tools become smarter with every interaction! 🚀"
+**Ready to experience the future of MCP servers?** [Get started now](#quick-start) and watch your AI tools become smarter with every interaction! 🚀
