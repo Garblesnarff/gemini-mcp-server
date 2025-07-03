@@ -34,3 +34,5 @@ coverage/
 gemini_config.json
 claude_config.json
 *_config.json
+*.sh
+
