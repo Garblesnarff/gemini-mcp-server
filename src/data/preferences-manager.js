@@ -12,14 +12,22 @@ const os = require('os');
 const { log } = require('../utils/logger');
 const { ensureDirectoryExists } = require('../utils/file-utils');
 const StorageAdapter = require('./storage-adapter');
+const { validateStorageType, ensureStoragePathProvided, validateStoragePath } = require('../utils/storage-validation');
 
 class PreferencesManager {
-  constructor(serverDataDir = null) {
+  constructor(serverDataDir = null, storageType = 'json', storagePath = null) {
+    validateStorageType(storageType);
+
     // Use the provided data directory or default to ../../../data
     this.dataDir = serverDataDir || path.join(__dirname, '..', '..', 'data');
-    this.preferencesFile = path.join(this.dataDir, 'tool-preferences.json');
+    this.preferencesFile = storagePath || path.join(this.dataDir, 'tool-preferences.json');
+
+    // Validate storage path (e.g., create directories if needed)
+    ensureStoragePathProvided(this.preferencesFile, storageType);
+    validateStoragePath(this.preferencesFile);
+
     this.cache = new Map();
-    this.storage = new StorageAdapter('json', this.preferencesFile);
+    this.storage = new StorageAdapter(storageType, this.preferencesFile);
     this.migrationCompleted = false;
     this.initialized = false; // Add initialized flag
   }

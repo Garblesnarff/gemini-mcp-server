@@ -10,16 +10,17 @@ const fs = require('fs');
 const path = require('path');
 const { log } = require('../utils/logger');
 
+const { validateStorageType, ensureStoragePathProvided, validateStoragePath } = require('../utils/storage-validation');
+
 class StorageAdapter {
   constructor(storageType = 'json', storagePath = null) {
+    // Validate and ensure storage type and path are provided
+    validateStorageType(storageType);
+    ensureStoragePathProvided(storagePath, storageType);
+    validateStoragePath(storagePath);
+
     this.type = storageType;
     this.storagePath = storagePath;
-
-    // Validate storage type
-    const supportedTypes = ['json', 'memory'];
-    if (!supportedTypes.includes(this.type)) {
-      throw new Error(`Unsupported storage type: ${this.type}. Supported types: ${supportedTypes.join(', ')}`);
-    }
 
     // Initialize memory storage if needed
     if (this.type === 'memory') {
