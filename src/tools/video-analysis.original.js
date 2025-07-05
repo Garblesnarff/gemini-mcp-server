@@ -1,6 +1,9 @@
 /**
- * Enhanced Video Analysis Tool for Gemini MCP Server.
- * Includes better error handling and timeout management.
+ * Video Analysis Tool for Gemini MCP Server.
+ * Analyzes video files using Gemini's multimodal video understanding capabilities.
+ * Supports both direct file paths and pre-uploaded file URIs.
+ *
+ * @author Cline (updated by Rob)
  */
 
 const BaseTool = require('./base-tool');
@@ -46,8 +49,17 @@ class VideoAnalysisTool extends BaseTool {
     );
   }
 
+  /**
+   * Executes the video analysis tool.
+   * @param {Object} args - The arguments for the tool.
+   * @param {string} [args.file_path] - Path to the video file to analyze.
+   * @param {string} [args.file_uri] - URI of pre-uploaded file (alternative to file_path).
+   * @param {string} [args.mime_type] - MIME type when using file_uri.
+   * @param {string} [args.analysis_type='summary'] - Type of analysis to perform.
+   * @param {string} [args.context] - Optional context about the video content.
+   * @returns {Promise<Object>} A promise that resolves to the tool's result.
+   */
   async execute(args) {
-    const startTime = Date.now();
     const analysisType = args.analysis_type ? validateString(args.analysis_type, 'analysis_type', ['summary', 'transcript', 'objects', 'detailed', 'custom']) : 'summary';
     const context = args.context ? validateString(args.context, 'context') : null;
 
@@ -115,24 +127,8 @@ class VideoAnalysisTool extends BaseTool {
         
         log(`Using pre-uploaded file URI: ${fileUri}, MIME type: ${mimeType}`, this.name);
         
-        try {
-          // Add timeout warning
-          log('Starting video analysis from URI (this may take 30-60 seconds for longer videos)...', this.name);
-          
-          // Analyze using file URI with explicit error handling
-          analysisText = await this.geminiService.analyzeVideoFromUri('VIDEO_ANALYSIS', analysisPrompt, fileUri, mimeType);
-          
-          const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-          log(`Video analysis completed in ${duration} seconds`, this.name);
-          
-        } catch (error) {
-          // Enhanced error logging
-          log(`Video analysis from URI failed: ${error.message}`, this.name);
-          if (error.message.includes('timeout')) {
-            throw new Error('Video analysis timed out. This usually happens with longer videos. Try a shorter video or use a smaller analysis_type like "summary".');
-          }
-          throw error;
-        }
+        // Analyze using file URI
+        analysisText = await this.geminiService.analyzeVideoFromUri('VIDEO_ANALYSIS', analysisPrompt, fileUri, mimeType);
         
       } else {
         // Traditional file path approach
@@ -145,24 +141,8 @@ class VideoAnalysisTool extends BaseTool {
 
         log(`Video file loaded: ${videoSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`, this.name);
         
-        try {
-          // Add timeout warning
-          log('Starting video analysis (this may take 30-60 seconds for longer videos)...', this.name);
-          
-          // Analyze using base64 data
-          analysisText = await this.geminiService.analyzeVideo('VIDEO_ANALYSIS', analysisPrompt, videoBase64, mimeType);
-          
-          const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-          log(`Video analysis completed in ${duration} seconds`, this.name);
-          
-        } catch (error) {
-          // Enhanced error logging
-          log(`Video analysis failed: ${error.message}`, this.name);
-          if (error.message.includes('timeout')) {
-            throw new Error('Video analysis timed out. This usually happens with videos over 1 minute. Try a shorter video or upload it first using gemini-upload-file.');
-          }
-          throw error;
-        }
+        // Analyze using base64 data
+        analysisText = await this.geminiService.analyzeVideo('VIDEO_ANALYSIS', analysisPrompt, videoBase64, mimeType);
       }
 
       if (analysisText) {
@@ -187,9 +167,7 @@ class VideoAnalysisTool extends BaseTool {
           finalResponse += `**Format:** ${filePath.split('.').pop().toUpperCase()}\n`;
         }
         
-        finalResponse += `**MIME Type:** ${mimeType}\n**Analysis Type:** ${analysisType}\n`;
-        finalResponse += `**Processing Time:** ${((Date.now() - startTime) / 1000).toFixed(1)} seconds\n\n`;
-        finalResponse += `**Analysis:**\n${analysisText}`;
+        finalResponse += `**MIME Type:** ${mimeType}\n**Analysis Type:** ${analysisType}\n\n**Analysis:**\n${analysisText}`;
         
         if (context && this.intelligenceSystem.initialized) {
           finalResponse += `\n\n---\n_Enhancement applied based on context: ${context}_`;
@@ -210,23 +188,12 @@ class VideoAnalysisTool extends BaseTool {
         content: [
           {
             type: 'text',
-            text: `Could not analyze video file: "${fileName}". The video may be corrupted, too long (over 2 minutes), or in an unsupported format. For longer videos, try uploading first with gemini-upload-file.`,
+            text: `Could not analyze video file: "${fileName}". The video may be corrupted, too long, or in an unsupported format.`,
           },
         ],
       };
     } catch (error) {
-      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      log(`Error analyzing video after ${duration} seconds: ${error.message}`, this.name);
-      
-      // Provide helpful error messages
-      if (error.message.includes('timeout')) {
-        throw new Error(`Video analysis timed out after ${duration} seconds. For videos longer than 1 minute, upload them first using gemini-upload-file, then analyze using the file_uri.`);
-      } else if (error.message.includes('quota')) {
-        throw new Error('Gemini API quota exceeded. Please try again later or check your API limits.');
-      } else if (error.message.includes('Invalid')) {
-        throw new Error(`Invalid video format or corrupted file. Supported formats: ${Object.keys(config.SUPPORTED_VIDEO_MIMES).join(', ')}`);
-      }
-      
+      log(`Error analyzing video: ${error.message}`, this.name);
       throw new Error(`Error analyzing video: ${error.message}`);
     }
   }
