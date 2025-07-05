@@ -184,6 +184,121 @@ class GeminiService {
       throw new Error(`Gemini video analysis failed: ${error.message}`);
     }
   }
+
+  /**
+   * Analyzes video using file URI (for files uploaded to Gemini File API)
+   * @param {string} modelType - The type of Gemini model to use.
+   * @param {string} prompt - The text prompt for the analysis.
+   * @param {string} fileUri - URI of the uploaded file.
+   * @param {string} mimeType - The MIME type of the video.
+   * @returns {Promise<string>} The analysis result text.
+   */
+  async analyzeVideoFromUri(modelType, prompt, fileUri, mimeType) {
+    try {
+      const modelConfig = getGeminiModelConfig(modelType);
+      const model = this.genAI.getGenerativeModel({ model: modelConfig.model });
+      const content = [{
+        parts: [
+          { text: prompt },
+          {
+            file_data: {
+              mime_type: mimeType,
+              file_uri: fileUri
+            }
+          },
+        ],
+      }];
+
+      const result = await model.generateContent({ contents: content });
+      log(`Video analysis (from URI) response received from Gemini API for model type: ${modelType}`, 'gemini-service');
+      return extractTextContent(result.response?.candidates?.[0]);
+    } catch (error) {
+      log(`Error analyzing video from URI with Gemini API for model type ${modelType}: ${error.message}`, 'gemini-service');
+      throw new Error(`Gemini video analysis from URI failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Analyzes image using file URI (for files uploaded to Gemini File API)
+   * @param {string} modelType - The type of Gemini model to use.
+   * @param {string} prompt - The text prompt for the analysis.
+   * @param {string} fileUri - URI of the uploaded file.
+   * @param {string} mimeType - The MIME type of the image.
+   * @returns {Promise<string>} The analysis result.
+   */
+  async analyzeImageFromUri(modelType, prompt, fileUri, mimeType) {
+    try {
+      const modelConfig = getGeminiModelConfig(modelType);
+      const model = this.genAI.getGenerativeModel({ model: modelConfig.model });
+      const content = [{
+        parts: [
+          { text: prompt },
+          {
+            file_data: {
+              mime_type: mimeType,
+              file_uri: fileUri
+            }
+          },
+        ],
+      }];
+
+      const request = { contents: content };
+      if (modelConfig.generationConfig) {
+        request.generationConfig = modelConfig.generationConfig;
+      }
+
+      const result = await model.generateContent(request);
+      log(`Image analysis (from URI) response received from Gemini API for model type: ${modelType}`, 'gemini-service');
+      
+      if (modelType === 'IMAGE_EDITING') {
+        return extractImageData(result.response?.candidates?.[0]);
+      }
+      return extractTextContent(result.response?.candidates?.[0]);
+    } catch (error) {
+      log(`Error analyzing image from URI with Gemini API for model type ${modelType}: ${error.message}`, 'gemini-service');
+      throw new Error(`Gemini image analysis from URI failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Transcribes audio using file URI (for files uploaded to Gemini File API)
+   * @param {string} modelType - The type of Gemini model to use.
+   * @param {string} fileUri - URI of the uploaded file.
+   * @param {string} mimeType - The MIME type of the audio.
+   * @param {string} [prompt] - Optional prompt to guide transcription.
+   * @returns {Promise<string>} The transcribed text.
+   */
+  async transcribeAudioFromUri(modelType, fileUri, mimeType, prompt = null) {
+    try {
+      const modelConfig = getGeminiModelConfig(modelType);
+      const model = this.genAI.getGenerativeModel({ model: modelConfig.model });
+      
+      const parts = [];
+      if (prompt) {
+        parts.push({ text: prompt });
+      }
+      parts.push({
+        file_data: {
+          mime_type: mimeType,
+          file_uri: fileUri
+        }
+      });
+      
+      const content = [{ parts }];
+
+      const request = { contents: content };
+      if (modelConfig.generationConfig) {
+        request.generationConfig = modelConfig.generationConfig;
+      }
+
+      const result = await model.generateContent(request);
+      log(`Audio transcription (from URI) response received from Gemini API for model type: ${modelType}`, 'gemini-service');
+      return extractTextContent(result.response?.candidates?.[0]);
+    } catch (error) {
+      log(`Error transcribing audio from URI with Gemini API for model type ${modelType}: ${error.message}`, 'gemini-service');
+      throw new Error(`Gemini audio transcription from URI failed: ${error.message}`);
+    }
+  }
 }
 
 module.exports = GeminiService;

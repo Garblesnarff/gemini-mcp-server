@@ -1,8 +1,9 @@
 /**
  * Video Analysis Tool for Gemini MCP Server.
  * Analyzes video files using Gemini's multimodal video understanding capabilities.
+ * Supports both direct file paths and pre-uploaded file URIs.
  *
- * @author Cline
+ * @author Cline (updated by Rob)
  */
 
 const BaseTool = require('./base-tool');
@@ -21,7 +22,15 @@ class VideoAnalysisTool extends BaseTool {
         properties: {
           file_path: {
             type: 'string',
-            description: 'Path to the video file to analyze (supports MP4, MOV, AVI, WEBM, MKV, FLV)',
+            description: 'Path to the video file to analyze (supports MP4, MOV, AVI, WEBM, MKV, FLV) - for files under 100MB',
+          },
+          file_uri: {
+            type: 'string',
+            description: 'URI of pre-uploaded file (use gemini-upload-file first for files over 100MB)',
+          },
+          mime_type: {
+            type: 'string',
+            description: 'MIME type when using file_uri (e.g., "video/mp4")',
           },
           analysis_type: {
             type: 'string',
@@ -33,7 +42,7 @@ class VideoAnalysisTool extends BaseTool {
             description: 'Optional context for intelligent enhancement (e.g., "security", "educational", "entertainment")',
           },
         },
-        required: ['file_path'],
+        required: [],
       },
       intelligenceSystem,
       geminiService,
@@ -43,39 +52,51 @@ class VideoAnalysisTool extends BaseTool {
   /**
    * Executes the video analysis tool.
    * @param {Object} args - The arguments for the tool.
-   * @param {string} args.file_path - Path to the video file to analyze.
+   * @param {string} [args.file_path] - Path to the video file to analyze.
+   * @param {string} [args.file_uri] - URI of pre-uploaded file (alternative to file_path).
+   * @param {string} [args.mime_type] - MIME type when using file_uri.
    * @param {string} [args.analysis_type='summary'] - Type of analysis to perform.
    * @param {string} [args.context] - Optional context about the video content.
    * @returns {Promise<Object>} A promise that resolves to the tool's result.
    */
   async execute(args) {
-    const filePath = validateNonEmptyString(args.file_path, 'file_path');
     const analysisType = args.analysis_type ? validateString(args.analysis_type, 'analysis_type', ['summary', 'transcript', 'objects', 'detailed', 'custom']) : 'summary';
     const context = args.context ? validateString(args.context, 'context') : null;
 
-    log(`Analyzing video file: "${filePath}" with analysis type: "${analysisType}" and context: ${context || 'general'}`, this.name);
+    // Support both file path and file URI
+    const fileUri = args.file_uri;
+    const filePath = args.file_path;
+    
+    if (!fileUri && !filePath) {
+      throw new Error('Either file_path or file_uri must be provided');
+    }
+    
+    if (fileUri && filePath) {
+      throw new Error('Please provide either file_path or file_uri, not both');
+    }
+
+    log(`Analyzing video ${fileUri ? 'from URI' : 'file'}: "${fileUri || filePath}" with analysis type: "${analysisType}" and context: ${context || 'general'}`, this.name);
 
     try {
-      validateFileSize(filePath, config.MAX_VIDEO_SIZE_MB);
-      const videoBuffer = readFileAsBuffer(filePath);
-      const videoBase64 = videoBuffer.toString('base64');
-      const mimeType = getMimeType(filePath, config.SUPPORTED_VIDEO_MIMES);
-
-      log(`Video file loaded: ${(videoBuffer.length / (1024 * 1024)).toFixed(2)}MB, MIME type: ${mimeType}`, this.name);
-
+      let analysisText;
+      let videoSizeMB = 0;
+      let mimeType;
+      let fileName;
+      
+      // Prepare analysis prompt
       let baseAnalysisPrompt;
       switch (analysisType) {
         case 'summary':
-          baseAnalysisPrompt = 'Please provide a comprehensive summary of this video. Describe what happens, who appears, key scenes, and the overall content.'; // eslint-disable-line max-len
+          baseAnalysisPrompt = 'Please provide a comprehensive summary of this video. Describe what happens, who appears, key scenes, and the overall content.';
           break;
         case 'transcript':
-          baseAnalysisPrompt = 'Please transcribe all spoken content in this video. Provide the complete text of dialogue, narration, and any other spoken words with timestamps if possible.'; // eslint-disable-line max-len
+          baseAnalysisPrompt = 'Please transcribe all spoken content in this video. Provide the complete text of dialogue, narration, and any other spoken words with timestamps if possible.';
           break;
         case 'objects':
-          baseAnalysisPrompt = 'Please identify and describe all objects, people, locations, and visual elements visible in this video. List them systematically and note when they appear.'; // eslint-disable-line max-len
+          baseAnalysisPrompt = 'Please identify and describe all objects, people, locations, and visual elements visible in this video. List them systematically and note when they appear.';
           break;
         case 'detailed':
-          baseAnalysisPrompt = 'Please provide a detailed analysis of this video including: summary of content, visual elements, audio/speech transcription, scene changes, key moments, and any notable details.'; // eslint-disable-line max-len
+          baseAnalysisPrompt = 'Please provide a detailed analysis of this video including: summary of content, visual elements, audio/speech transcription, scene changes, key moments, and any notable details.';
           break;
         case 'custom':
           baseAnalysisPrompt = context || 'Please analyze this video and describe what you observe.';
@@ -98,15 +119,38 @@ class VideoAnalysisTool extends BaseTool {
       if (context && analysisType !== 'custom') {
         analysisPrompt += ` Additional context: ${context}`;
       }
+      
+      if (fileUri) {
+        // Using pre-uploaded file URI
+        mimeType = validateNonEmptyString(args.mime_type, 'mime_type');
+        fileName = fileUri.split('/').pop();
+        
+        log(`Using pre-uploaded file URI: ${fileUri}, MIME type: ${mimeType}`, this.name);
+        
+        // Analyze using file URI
+        analysisText = await this.geminiService.analyzeVideoFromUri('VIDEO_ANALYSIS', analysisPrompt, fileUri, mimeType);
+        
+      } else {
+        // Traditional file path approach
+        fileName = filePath;
+        validateFileSize(filePath, config.MAX_VIDEO_SIZE_MB);
+        const videoBuffer = readFileAsBuffer(filePath);
+        videoSizeMB = videoBuffer.length / (1024 * 1024);
+        const videoBase64 = videoBuffer.toString('base64');
+        mimeType = getMimeType(filePath, config.SUPPORTED_VIDEO_MIMES);
 
-      const analysisText = await this.geminiService.analyzeVideo('VIDEO_ANALYSIS', analysisPrompt, videoBase64, mimeType);
+        log(`Video file loaded: ${videoSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`, this.name);
+        
+        // Analyze using base64 data
+        analysisText = await this.geminiService.analyzeVideo('VIDEO_ANALYSIS', analysisPrompt, videoBase64, mimeType);
+      }
 
       if (analysisText) {
         log('Video analysis completed successfully', this.name);
 
         if (this.intelligenceSystem.initialized) {
           try {
-            const resultSummary = `Video analysis completed successfully: ${analysisText.length} characters, type: ${analysisType}`; // eslint-disable-line max-len
+            const resultSummary = `Video analysis completed successfully: ${analysisText.length} characters, type: ${analysisType}`;
             await this.intelligenceSystem.learnFromInteraction(baseAnalysisPrompt, enhancedAnalysisPrompt, resultSummary, context, this.name);
             log('Tool Intelligence learned from interaction', this.name);
           } catch (err) {
@@ -114,7 +158,17 @@ class VideoAnalysisTool extends BaseTool {
           }
         }
 
-        let finalResponse = `✓ Video file analyzed successfully:\n\n**File:** ${filePath}\n**Size:** ${(videoBuffer.length / (1024 * 1024)).toFixed(2)}MB\n**Format:** ${filePath.split('.').pop().toUpperCase()}\n**Analysis Type:** ${analysisType}\n\n**Analysis:**\n${analysisText}`; // eslint-disable-line max-len
+        let finalResponse = `✓ Video file analyzed successfully:\n\n**File:** ${fileName}\n`;
+        
+        if (fileUri) {
+          finalResponse += `**Method:** File URI (pre-uploaded)\n**URI:** ${fileUri}\n`;
+        } else {
+          finalResponse += `**Method:** Direct upload\n**Size:** ${videoSizeMB.toFixed(2)}MB\n`;
+          finalResponse += `**Format:** ${filePath.split('.').pop().toUpperCase()}\n`;
+        }
+        
+        finalResponse += `**MIME Type:** ${mimeType}\n**Analysis Type:** ${analysisType}\n\n**Analysis:**\n${analysisText}`;
+        
         if (context && this.intelligenceSystem.initialized) {
           finalResponse += `\n\n---\n_Enhancement applied based on context: ${context}_`;
         }
@@ -128,12 +182,13 @@ class VideoAnalysisTool extends BaseTool {
           ],
         };
       }
+      
       log('No analysis text generated', this.name);
       return {
         content: [
           {
             type: 'text',
-            text: `Could not analyze video file: "${filePath}". The video may be corrupted, too long, or in an unsupported format.`,
+            text: `Could not analyze video file: "${fileName}". The video may be corrupted, too long, or in an unsupported format.`,
           },
         ],
       };
