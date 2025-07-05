@@ -115,22 +115,35 @@ class GeminiService {
    * @param {string} modelType - The type of Gemini model to use (e.g., 'AUDIO_TRANSCRIPTION').
    * @param {string} audioBase64 - Base64 encoded audio data.
    * @param {string} mimeType - The MIME type of the audio (e.g., 'audio/mpeg', 'audio/wav').
+   * @param {string} [prompt] - Optional prompt to guide transcription behavior.
    * @returns {Promise<string>} The transcribed text.
    */
-  async transcribeAudio(modelType, audioBase64, mimeType) {
+  async transcribeAudio(modelType, audioBase64, mimeType, prompt = null) {
     try {
       const modelConfig = getGeminiModelConfig(modelType);
       const model = this.genAI.getGenerativeModel({ model: modelConfig.model });
-      const content = [{
-        parts: [{
-          inlineData: {
-            data: audioBase64,
-            mimeType,
-          },
-        }],
-      }];
+      
+      // Build content with optional prompt
+      const parts = [];
+      if (prompt) {
+        parts.push({ text: prompt });
+      }
+      parts.push({
+        inlineData: {
+          data: audioBase64,
+          mimeType,
+        },
+      });
+      
+      const content = [{ parts }];
 
-      const result = await model.generateContent({ contents: content });
+      // Build request with optional generationConfig
+      const request = { contents: content };
+      if (modelConfig.generationConfig) {
+        request.generationConfig = modelConfig.generationConfig;
+      }
+
+      const result = await model.generateContent(request);
       log(`Audio transcription response received from Gemini API for model type: ${modelType}`, 'gemini-service');
       return extractTextContent(result.response?.candidates?.[0]);
     } catch (error) {

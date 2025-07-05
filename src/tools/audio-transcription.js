@@ -82,7 +82,9 @@ class AudioTranscriptionTool extends BaseTool {
         }
       } else if (context === 'verbatim') {
         // For verbatim mode, apply special enhancement directly
-        enhancedPrompt = basePrompt + '\n\nProvide an exact word-for-word transcription including all utterances, pauses, filler words (um, uh, etc.), repetitions, and incomplete sentences. Preserve emotional expressions in brackets like [laughs] or [sighs]. ';
+        enhancedPrompt = 'TRANSCRIBE VERBATIM: Provide ONLY an exact word-for-word transcription of the spoken content. Do NOT analyze, interpret, or explain the content. ';
+        
+        enhancedPrompt += 'Include all utterances, pauses, filler words (um, uh, etc.), repetitions, and incomplete sentences. Preserve emotional expressions in brackets like [laughs] or [sighs]. ';
         
         if (preserveSpelledAcronyms) {
           enhancedPrompt += 'Keep spelled-out letters exactly as spoken with hyphens (like U-R-L, H-T-T-P-S, not URL or HTTPS). ';
@@ -90,7 +92,9 @@ class AudioTranscriptionTool extends BaseTool {
           enhancedPrompt += 'Keep spelled-out letters as hyphenated (like U-R-L not URL). ';
         }
         
-        enhancedPrompt += 'Maintain original punctuation including ellipses (...) and dashes. Do not add any artifacts or sounds at the end of the transcription. Do not summarize or clean up the text. Include everything exactly as spoken. This is a verbatim transcription so every word, sound, and pause should be captured.';
+        enhancedPrompt += 'Maintain original punctuation including ellipses (...) and dashes. Do not add any artifacts or sounds at the end of the transcription. ';
+        enhancedPrompt += 'CRITICAL: Do NOT provide analysis, interpretation, summary, or explanation. ONLY provide the exact spoken words. ';
+        enhancedPrompt += 'This is a verbatim transcription task - transcribe exactly what is spoken, nothing more.';
         
         log('Applied verbatim transcription enhancement', this.name);
       }
