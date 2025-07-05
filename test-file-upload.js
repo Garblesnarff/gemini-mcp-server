@@ -4,16 +4,20 @@
  * Tests the new resumable upload capability for large files
  */
 
+// Manually set the environment variable from .env
+process.env.GEMINI_API_KEY = 'AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk';
+
 const FileUploadService = require('./src/gemini/file-api/file-upload-service');
+const config = require('./src/config');
 const path = require('path');
 const fs = require('fs');
 
-// Load config
-require('dotenv').config();
-const API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
+// Get API key from config
+const API_KEY = config.API_KEY;
 
-if (!API_KEY) {
-  console.error('Error: GOOGLE_GEMINI_API_KEY environment variable not set');
+if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+  console.error('Error: GEMINI_API_KEY not found in config');
+  console.error('Config API_KEY value:', config.API_KEY);
   process.exit(1);
 }
 
@@ -26,6 +30,7 @@ async function testFileUpload() {
   fs.writeFileSync(testFilePath, testContent);
   
   console.log('Testing Gemini File API Upload...\n');
+  console.log('Using API Key:', API_KEY.substring(0, 10) + '...\n');
   
   try {
     // Test 1: Upload a file
@@ -70,7 +75,10 @@ async function testFileUpload() {
     console.log('You can now upload files up to 2GB for use with Gemini.');
     
   } catch (error) {
-    console.error('Test failed:', error.message);
+    console.error('\nTest failed:', error.message);
+    if (error.stack) {
+      console.error('\nStack trace:', error.stack);
+    }
     // Clean up test file if it exists
     if (fs.existsSync(testFilePath)) {
       fs.unlinkSync(testFilePath);

@@ -101,16 +101,56 @@ class FileUploadTool extends BaseTool {
     try {
       const fileInfo = await this.fileUploadService.uploadFile(filePath, displayName);
       
-      const response = `✓ File uploaded successfully to Gemini File API:\n\n` +
-        `**Name:** ${fileInfo.display_name}\n` +
-        `**URI:** ${fileInfo.uri}\n` +
-        `**File ID:** ${fileInfo.name}\n` +
-        `**Size:** ${(fileInfo.size_bytes / (1024 * 1024)).toFixed(2)}MB\n` +
-        `**MIME Type:** ${fileInfo.mime_type}\n` +
-        `**Created:** ${new Date(fileInfo.create_time).toLocaleString()}\n` +
-        `**Expires:** ${new Date(fileInfo.expiration_time).toLocaleString()}\n\n` +
-        `This file can now be used in other Gemini operations by referencing its URI.\n` +
-        `The file will be automatically deleted after 48 hours.`;
+      // Build response with available fields
+      let response = `✓ File uploaded successfully to Gemini File API:\n\n`;
+      
+      if (fileInfo.display_name) {
+        response += `**Name:** ${fileInfo.display_name}\n`;
+      }
+      
+      if (fileInfo.uri) {
+        response += `**URI:** ${fileInfo.uri}\n`;
+      }
+      
+      if (fileInfo.name) {
+        response += `**File ID:** ${fileInfo.name}\n`;
+      }
+      
+      if (fileInfo.size_bytes && fileInfo.size_bytes > 0) {
+        response += `**Size:** ${(fileInfo.size_bytes / (1024 * 1024)).toFixed(2)}MB\n`;
+      } else {
+        response += `**Size:** ${fileSizeMB.toFixed(2)}MB (estimated)\n`;
+      }
+      
+      if (fileInfo.mime_type) {
+        response += `**MIME Type:** ${fileInfo.mime_type}\n`;
+      }
+      
+      if (fileInfo.create_time) {
+        try {
+          response += `**Created:** ${new Date(fileInfo.create_time).toLocaleString()}\n`;
+        } catch (e) {
+          response += `**Created:** ${fileInfo.create_time}\n`;
+        }
+      }
+      
+      if (fileInfo.expiration_time) {
+        try {
+          response += `**Expires:** ${new Date(fileInfo.expiration_time).toLocaleString()}\n`;
+        } catch (e) {
+          response += `**Expires:** ${fileInfo.expiration_time}\n`;
+        }
+      }
+      
+      response += `\n`;
+      
+      if (fileInfo.uri) {
+        response += `This file can now be used in other Gemini operations by referencing its URI.\n`;
+        response += `The file will be automatically deleted after 48 hours.`;
+      } else {
+        response += `File uploaded but URI not returned. Check logs for details.`;
+        log(`Warning: File uploaded but no URI returned. Response: ${JSON.stringify(fileInfo)}`, this.name);
+      }
       
       // Learn from the interaction if intelligence is enabled
       if (this.intelligenceSystem.initialized) {

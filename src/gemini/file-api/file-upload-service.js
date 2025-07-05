@@ -113,9 +113,27 @@ class FileUploadService {
         res.on('data', chunk => data += chunk);
         res.on('end', () => {
           try {
-            const fileInfo = JSON.parse(data);
-            resolve(fileInfo.file);
+            log(`Upload response: ${data}`, 'file-upload');
+            const response = JSON.parse(data);
+            
+            // The API returns the file object directly, not wrapped
+            const fileInfo = response.file || response;
+            
+            // Ensure we have the required fields with defaults
+            const normalizedFileInfo = {
+              name: fileInfo.name || 'unknown',
+              uri: fileInfo.uri || '',
+              display_name: fileInfo.displayName || fileInfo.display_name || path.basename(filePath),
+              mime_type: fileInfo.mimeType || fileInfo.mime_type || this.getMimeType(filePath),
+              size_bytes: fileInfo.sizeBytes || fileInfo.size_bytes || fileSize,
+              create_time: fileInfo.createTime || fileInfo.create_time || new Date().toISOString(),
+              expiration_time: fileInfo.expirationTime || fileInfo.expiration_time || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+              state: fileInfo.state || 'ACTIVE'
+            };
+            
+            resolve(normalizedFileInfo);
           } catch (err) {
+            log(`Failed to parse upload response: ${data}`, 'file-upload');
             reject(new Error(`Failed to parse upload response: ${err.message}`));
           }
         });
@@ -148,9 +166,26 @@ class FileUploadService {
         res.on('data', chunk => data += chunk);
         res.on('end', () => {
           try {
-            const fileInfo = JSON.parse(data);
-            resolve(fileInfo);
+            log(`Get file response: ${data}`, 'file-upload');
+            const response = JSON.parse(data);
+            
+            // Normalize the file info
+            const fileInfo = response.file || response;
+            const normalizedFileInfo = {
+              name: fileInfo.name || fileName,
+              uri: fileInfo.uri || '',
+              display_name: fileInfo.displayName || fileInfo.display_name || fileInfo.name,
+              mime_type: fileInfo.mimeType || fileInfo.mime_type || 'unknown',
+              size_bytes: fileInfo.sizeBytes || fileInfo.size_bytes || 0,
+              create_time: fileInfo.createTime || fileInfo.create_time || new Date().toISOString(),
+              expiration_time: fileInfo.expirationTime || fileInfo.expiration_time || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+              state: fileInfo.state || 'ACTIVE',
+              sha256_hash: fileInfo.sha256Hash || fileInfo.sha256_hash || 'N/A'
+            };
+            
+            resolve(normalizedFileInfo);
           } catch (err) {
+            log(`Failed to parse file info: ${data}`, 'file-upload');
             reject(new Error(`Failed to parse file info: ${err.message}`));
           }
         });
@@ -176,9 +211,31 @@ class FileUploadService {
         res.on('data', chunk => data += chunk);
         res.on('end', () => {
           try {
+            log(`List files response: ${data.substring(0, 500)}...`, 'file-upload');
             const response = JSON.parse(data);
-            resolve(response);
+            
+            // Normalize the response
+            const normalizedResponse = {
+              files: [],
+              next_page_token: response.nextPageToken || response.next_page_token
+            };
+            
+            if (response.files && Array.isArray(response.files)) {
+              normalizedResponse.files = response.files.map(file => ({
+                name: file.name || 'unknown',
+                uri: file.uri || '',
+                display_name: file.displayName || file.display_name || file.name,
+                mime_type: file.mimeType || file.mime_type || 'unknown',
+                size_bytes: file.sizeBytes || file.size_bytes || 0,
+                create_time: file.createTime || file.create_time || new Date().toISOString(),
+                expiration_time: file.expirationTime || file.expiration_time || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+                state: file.state || 'ACTIVE'
+              }));
+            }
+            
+            resolve(normalizedResponse);
           } catch (err) {
+            log(`Failed to parse list response: ${data}`, 'file-upload');
             reject(new Error(`Failed to parse list response: ${err.message}`));
           }
         });
