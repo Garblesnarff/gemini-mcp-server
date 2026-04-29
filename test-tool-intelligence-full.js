@@ -13,7 +13,7 @@ console.log('=== Testing Gemini MCP Server with Smart Tool Intelligence ===\n');
 const server = spawn('node', [path.join(__dirname, 'gemini-server.js')], {
   env: {
     ...process.env,
-    GEMINI_API_KEY: 'AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk',
+    GEMINI_API_KEY: 'YOUR_API_KEY_HERE',
     DEBUG: 'true',
     OUTPUT_DIR: path.join(process.env.HOME, 'Claude', 'gemini-images'),
   },

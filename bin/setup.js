@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
-const Config = require('../src/config');
+const config = require('../src/config');
 const pkg = require('../package.json');
 
 // Print banner
@@ -23,8 +23,8 @@ console.log(chalk.cyan(`v${pkg.version}`));
 console.log(chalk.cyan('Configuration tool for Gemini MCP Server'));
 console.log();
 
-// Initialize configuration
-const config = new Config();
+// Configuration is already initialized in src/config.js
+// const config = new Config();
 
 async function main() {
   console.log(chalk.cyan('This wizard will help you set up the Gemini MCP server for Claude Desktop.\n'));

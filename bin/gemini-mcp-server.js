@@ -8,8 +8,8 @@ const chalk = require('chalk');
 const figlet = require('figlet');
 const path = require('path');
 const fs = require('fs');
-const { createServer } = require('../src/server');
-const Config = require('../src/config');
+const config = require('../src/config');
+const { startServer } = require('../src/server');
 const pkg = require('../package.json');
 
 // Print banner
@@ -35,7 +35,8 @@ program
 const options = program.opts();
 
 // Initialize configuration
-const config = new Config();
+// Configuration is already initialized in src/config.js
+// const config = new Config();
 
 // Reset config if requested
 if (options.resetConfig) {
@@ -88,8 +89,7 @@ if (!config.apiKey) {
 
 // Start the server
 try {
-  const server = createServer();
-  server.start();
+  startServer();
 } catch (error) {
   console.error(chalk.red(`Failed to start server: ${error.message}`));
   process.exit(1);

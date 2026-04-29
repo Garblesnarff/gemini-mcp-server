@@ -1,5 +1,5 @@
 # Use an official Node.js runtime as the base image
-FROM node:16-alpine
+FROM node:20-alpine
 
 # Set the working directory
 WORKDIR /app
@@ -26,4 +26,4 @@ RUN mkdir -p /app/output
 # EXPOSE 8080
 
 # Set the entrypoint to run the server
-ENTRYPOINT ["node", "bin/gemini-mcp-server.js"]
+ENTRYPOINT ["node", "gemini-server.js"]

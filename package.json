@@ -29,7 +29,10 @@
   "author": "Rob with Cline + Gemini 2.5 Pro + Claude",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0"
+    "@google/generative-ai": "^0.21.0",
+    "commander": "^9.4.1",
+    "chalk": "^4.1.2",
+    "figlet": "^1.5.2"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

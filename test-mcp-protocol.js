@@ -9,7 +9,7 @@ console.log('Testing Gemini MCP server startup...\n');
 // Set up environment
 const env = {
   ...process.env,
-  GEMINI_API_KEY: 'AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk',
+  GEMINI_API_KEY: 'YOUR_API_KEY_HERE',
   OUTPUT_DIR: path.join(process.env.HOME, 'Claude', 'gemini-images'),
   DEBUG: 'true'
 };
