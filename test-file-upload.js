@@ -5,7 +5,7 @@
  */
 
 // Manually set the environment variable from .env
-process.env.GEMINI_API_KEY = 'AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk';
+process.env.GEMINI_API_KEY = 'YOUR_API_KEY_HERE';
 
 const FileUploadService = require('./src/gemini/file-api/file-upload-service');
 const config = require('./src/config');

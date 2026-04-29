@@ -14,17 +14,13 @@ const config = {
    * Fetched from process.env.GEMINI_API_KEY or uses fallback keys.
    * @type {string}
    */
-  API_KEY: process.env.GEMINI_API_KEY || 'AIzaSyD0AGPlaa8aV8NCFu5xVPMRLdGaamRDIvc',
+  API_KEY: process.env.GEMINI_API_KEY || '',
 
   /**
    * Gemini API Key fallbacks for improved reliability.
    * @type {string[]}
    */
-  GEMINI_API_KEY_FALLBACKS: [
-    'AIzaSyD0AGPlaa8aV8NCFu5xVPMRLdGaamRDIvc',
-    'AIzaSyC8BW5mHihe4jV-hczXrvgNcPo_dMdtEas',
-    'AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk'
-  ],
+  GEMINI_API_KEY_FALLBACKS: [],
 
   /**
    * OpenRouter API Key for backup/alternative provider.
@@ -147,34 +143,34 @@ const config = {
    */
   GEMINI_MODELS: {
     IMAGE_GENERATION: {
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-3.1-flash-image-preview',
       generationConfig: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
     },
     IMAGE_EDITING: {
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-3.1-flash-image-preview',
       generationConfig: {
         responseModalities: ['TEXT', 'IMAGE'],
         temperature: 0.3, // Lower temperature for consistent edits
       },
     },
     CHAT: {
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       generationConfig: {
         temperature: 0.7, // Higher temperature for more conversational responses
         maxOutputTokens: 2048,
       },
     },
     AUDIO_TRANSCRIPTION: {
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.1-flash-tts-preview',
       generationConfig: {
         temperature: 0.1, // Low temperature for accurate transcription
         maxOutputTokens: 2048,
       },
     },
     CODE_EXECUTION: {
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       generationConfig: {
         temperature: 0.1, // Low temperature for accurate code execution
         maxOutputTokens: 2048,
@@ -184,21 +180,21 @@ const config = {
       }],
     },
     VIDEO_ANALYSIS: {
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       generationConfig: {
         temperature: 0.2, // Low temperature for accurate analysis
         maxOutputTokens: 2048,
       },
     },
     IMAGE_ANALYSIS: {
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.0-flash-exp',
       generationConfig: {
         temperature: 0.2, // Low temperature for accurate analysis
         maxOutputTokens: 2048,
       },
     },
     ADVANCED_IMAGE_GENERATION: {
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-3.1-flash-image-preview',
       generationConfig: {
         responseModalities: ['TEXT', 'IMAGE'],
         temperature: 0.4, // Balanced for creative consistency

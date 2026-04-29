@@ -11,7 +11,7 @@ console.log('Testing Gemini MCP server with Tool Intelligence...');
 const server = spawn('node', ['/Users/rob/Claude/mcp-servers/gemini-server.js'], {
   env: {
     ...process.env,
-    GEMINI_API_KEY: 'AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk',
+    GEMINI_API_KEY: 'YOUR_API_KEY_HERE',
     DEBUG: 'true',
   },
 });
