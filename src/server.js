@@ -1,187 +1,105 @@
 /**
- * Main MCP server entry point for Gemini.
- * Handles MCP protocol communication (stdin/stdout) and dispatches requests.
+ * Gemini MCP Server v3 — MCP layer.
  *
- * @author Cline
+ * Uses the official @modelcontextprotocol/sdk (no more hand-rolled JSON-RPC):
+ *   - StdioServerTransport (default, for Claude Desktop / local hosts)
+ *   - StreamableHTTPServerTransport via Express (--http, for remote use)
+ *
+ * Also exposes the learned profile as a resource so it's inspectable.
  */
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import express from 'express';
+import { randomUUID } from 'node:crypto';
+import { defineTools } from './tools/definitions.js';
+import { jsonSchemaToZod } from './zod-convert.js';
 
-const readline = require('readline');
-const { log } = require('./utils/logger');
-const config = require('./config');
-const { ensureDirectoryExists } = require('./utils/file-utils');
-const { getToolListMetadata, dispatchToolCall, intelligenceSystem } = require('./tools'); // Import tool registry and intelligence system
+export const SERVER_NAME = 'gemini-mcp-server';
+export const SERVER_VERSION = '3.0.0';
 
-// Ensure output directory exists
-ensureDirectoryExists(config.OUTPUT_DIR, 'server');
+export function createMcpServer(ctx) {
+  const server = new McpServer(
+    { name: SERVER_NAME, version: SERVER_VERSION },
+    { capabilities: { tools: { listChanged: false }, resources: {} } }
+  );
 
-// Send JSON-RPC response to stdout
-function sendResponse(response) {
-  process.stdout.write(`${JSON.stringify(response)}\n`);
-}
-
-// Define a map for request handlers to improve scalability
-const requestHandlers = new Map();
-
-requestHandlers.set('initialize', async (id, params) => ({
-  jsonrpc: '2.0',
-  id,
-  result: {
-    protocolVersion: '2024-11-05',
-    serverInfo: {
-      name: 'gemini',
-      version: '2.0.0',
-    },
-    capabilities: {
-      experimental: {},
-      tools: {
-        listChanged: false,
+  for (const tool of defineTools(ctx)) {
+    server.registerTool(
+      tool.name,
+      {
+        title: tool.title,
+        description: tool.description,
+        inputSchema: jsonSchemaToZod(tool.inputSchema),
+        ...(tool.outputSchema ? { outputSchema: jsonSchemaToZod(tool.outputSchema) } : {}),
+        annotations: tool.annotations,
       },
-    },
-  },
-}));
-
-requestHandlers.set('tools/list', async (id, params) => ({
-  jsonrpc: '2.0',
-  id,
-  result: {
-    tools: getToolListMetadata(),
-  },
-}));
-
-requestHandlers.set('tools/call', async (id, params) => {
-  const { name, arguments: args } = params;
-  try {
-    const toolResult = await dispatchToolCall(name, args);
-    return {
-      jsonrpc: '2.0',
-      id,
-      result: toolResult,
-    };
-  } catch (error) {
-    log(`Error calling tool '${name}': ${error.message}`, 'server');
-    return {
-      jsonrpc: '2.0',
-      id,
-      error: {
-        code: -32000, // Internal error
-        message: `Error calling tool '${name}': ${error.message}`,
-      },
-    };
-  }
-});
-
-requestHandlers.set('resources/list', async (id, params) => ({
-  jsonrpc: '2.0',
-  id,
-  error: {
-    code: -32601,
-    message: 'Method not found',
-  },
-}));
-
-requestHandlers.set('prompts/list', async (id, params) => ({
-  jsonrpc: '2.0',
-  id,
-  error: {
-    code: -32601,
-    message: 'Method not found',
-  },
-}));
-
-requestHandlers.set('notifications/initialized', async (id, params) => {
-  log('Received notification: notifications/initialized', 'server');
-  // No response for notifications
-  return null;
-});
-
-/**
- * Processes an incoming JSON-RPC request.
- * @param {Object} request - The parsed JSON-RPC request object.
- */
-async function processRequest(request) {
-  log(`Processing request: ${JSON.stringify(request)}`, 'server');
-  const { id, method, params } = request;
-
-  const handler = requestHandlers.get(method);
-  if (handler) {
-    const response = await handler(id, params);
-    if (response) { // Only send response if handler returns one (e.g., not for notifications)
-      sendResponse(response);
-    }
-  } else {
-    sendResponse({
-      jsonrpc: '2.0',
-      id,
-      error: {
-        code: -32601,
-        message: 'Method not found',
-      },
-    });
-  }
-}
-
-/**
- * Starts the MCP server, listening for requests on stdin.
- */
-async function startServer() {
-  log('Gemini MCP server (with Smart Tool Intelligence) started - listening on stdin', 'server');
-
-  // Initialize the singleton intelligence system
-  await intelligenceSystem.initialize();
-
-  if (intelligenceSystem.initialized) {
-    log('The gemini-chat tool now learns your preferences and applies them automatically', 'server');
-  } else {
-    log('Tool Intelligence is disabled - running in basic mode', 'server');
-  }
-
-  const rl = readline.createInterface({
-    input: process.stdin,
-    terminal: false,
-  });
-
-  rl.on('line', async (line) => {
-    if (line.trim()) {
-      try {
-        const request = JSON.parse(line);
-        await processRequest(request);
-      } catch (error) {
-        log(`Error parsing request: ${error.message}`, 'server');
+      async (args) => {
         try {
-          const request = JSON.parse(line);
-          if (request.id) {
-            sendResponse({
-              jsonrpc: '2.0',
-              id: request.id,
-              error: {
-                code: -32700,
-                message: `Parse error: ${error.message}`,
-              },
-            });
-          }
-        } catch (e) {
-          log(`Couldn't parse request at all: ${e.message}`, 'server');
+          return await tool.run(args ?? {});
+        } catch (err) {
+          ctx.log(`Tool ${tool.name} threw: ${err.message}`);
+          return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
         }
       }
+    );
+  }
+
+  // Inspectable learned profile (transparency for the learning system).
+  server.registerResource(
+    'learning-profile',
+    'gemini://profile/current',
+    { title: 'Learned user profile', description: 'What the server has learned from your feedback, as JSON.', mimeType: 'application/json' },
+    async (uri) => ({
+      contents: [{
+        uri: uri.href,
+        mimeType: 'application/json',
+        text: JSON.stringify(ctx.learning.getProfile(), null, 2),
+      }],
+    })
+  );
+
+  return server;
+}
+
+export async function runStdio(ctx) {
+  const server = createMcpServer(ctx);
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  ctx.log('Gemini MCP server v3 listening on stdio');
+}
+
+export async function runHttp(ctx, port) {
+  const app = express();
+  app.use(express.json({ limit: '25mb' }));
+
+  // One MCP server + transport per client session (SDK's documented pattern).
+  const sessions = new Map();
+
+  app.post('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'];
+    try {
+      let transport;
+      if (sessionId && sessions.has(sessionId)) {
+        transport = sessions.get(sessionId);
+      } else {
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (sid) => sessions.set(sid, transport),
+          onsessionclosed: (sid) => sessions.delete(sid),
+        });
+        const server = createMcpServer(ctx);
+        await server.connect(transport);
+      }
+      await transport.handleRequest(req, res, req.body);
+    } catch (err) {
+      ctx.log(`HTTP MCP error: ${err.message}`);
+      if (!res.headersSent) res.status(500).json({ error: err.message });
     }
   });
 
-  process.on('SIGINT', () => {
-    log('Received SIGINT, shutting down', 'server');
-    process.exit(0);
-  });
+  app.get('/health', (_req, res) => res.json({ ok: true, server: SERVER_NAME, version: SERVER_VERSION }));
 
-  process.on('SIGTERM', () => {
-    log('Received SIGTERM, shutting down', 'server');
-    process.exit(0);
-  });
-
-  process.on('uncaughtException', (error) => {
-    log(`Uncaught exception: ${error.message}`, 'server');
-    log(error.stack, 'server');
-  });
+  await new Promise((resolve) => app.listen(port, resolve));
+  ctx.log(`Gemini MCP server v3 listening on http://localhost:${port}/mcp`);
 }
-
-module.exports = {
-  startServer,
-};

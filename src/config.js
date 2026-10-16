@@ -1,253 +1,75 @@
 /**
- * Configuration management for the Gemini MCP Server.
- * Centralizes all environment-dependent and static configurations.
+ * Central configuration for the Gemini MCP Server v3.
  *
- * @author Cline (Updated by Assistant)
+ * Everything comes from the environment. There are no hardcoded API keys,
+ * no fallback keys, and nothing secret is ever logged.
  */
+import path from 'node:path';
+import os from 'node:os';
 
-const path = require('path');
-const os = require('os');
+const ROOT = path.resolve(new URL('.', import.meta.url).pathname, '..');
 
-const config = {
-  /**
-   * Gemini API Key.
-   * Fetched from process.env.GEMINI_API_KEY or uses fallback keys.
-   * @type {string}
-   */
-  API_KEY: process.env.GEMINI_API_KEY || 'AIzaSyD0AGPlaa8aV8NCFu5xVPMRLdGaamRDIvc',
+function env(name, fallback = '') {
+  const v = process.env[name];
+  return v === undefined || v === '' ? fallback : v;
+}
 
-  /**
-   * Gemini API Key fallbacks for improved reliability.
-   * @type {string[]}
-   */
-  GEMINI_API_KEY_FALLBACKS: [
-    'AIzaSyD0AGPlaa8aV8NCFu5xVPMRLdGaamRDIvc',
-    'AIzaSyC8BW5mHihe4jV-hczXrvgNcPo_dMdtEas',
-    'AIzaSyD6Ki3ZtL19-Km9y8EQcywZvHJLDiRDyNk'
-  ],
+export const config = {
+  /** Gemini Developer API key (https://aistudio.google.com/apikey). Required. */
+  apiKey: env('GEMINI_API_KEY'),
 
-  /**
-   * OpenRouter API Key for backup/alternative provider.
-   * Fetched from process.env.OPENROUTER_API_KEY or uses the provided key.
-   * @type {string}
-   */
-  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '',
+  /** Optional OpenRouter key, used as a fallback provider for image tools. */
+  openRouterKey: env('OPENROUTER_API_KEY'),
+  openRouterBaseUrl: env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
 
-  /**
-   * OpenRouter API Base URL.
-   * @type {string}
-   */
-  OPENROUTER_BASE_URL: 'https://openrouter.ai/api/v1',
+  outputDir: env('OUTPUT_DIR', path.join(ROOT, 'output')),
+  dataDir: env('DATA_DIR', path.join(ROOT, 'data')),
 
-  /**
-   * Use OpenRouter for advanced image generation (free tier).
-   * Fetched from process.env.USE_OPENROUTER_FOR_ADVANCED_IMAGE or defaults to true.
-   * @type {boolean}
-   */
-  USE_OPENROUTER_FOR_ADVANCED_IMAGE: process.env.USE_OPENROUTER_FOR_ADVANCED_IMAGE !== 'false',
+  debug: env('DEBUG', 'false').toLowerCase() === 'true',
 
-  /**
-   * Directory for output files (e.g., generated images).
-   * Fetched from process.env.OUTPUT_DIR or defaults to a subdirectory in user's Claude folder.
-   * @type {string}
-   */
-  OUTPUT_DIR: process.env.OUTPUT_DIR || path.join(os.homedir(), 'Claude', 'gemini-images'),
+  httpPort: Number.parseInt(env('MCP_HTTP_PORT', '3100'), 10),
 
-  /**
-   * Debug mode flag.
-   * Fetched from process.env.DEBUG or defaults to false.
-   * @type {boolean}
-   */
-  DEBUG: process.env.DEBUG === 'true',
-
-  /**
-   * Debug advanced image generation (extra verbose logging).
-   * Fetched from process.env.DEBUG_ADVANCED_IMAGE or defaults to false.
-   * @type {boolean}
-   */
-  DEBUG_ADVANCED_IMAGE: process.env.DEBUG_ADVANCED_IMAGE === 'true',
-
-  /**
-   * Internal data directory for the server.
-   * All server data including preferences is now stored internally.
-   * @type {string}
-   */
-  DATA_DIR: path.join(__dirname, '..', 'data'),
-
-  /**
-   * Default tool name for the intelligence system.
-   * @type {string}
-   */
-  TOOL_INTELLIGENCE_NAME: 'gemini-chat',
-
-  /**
-   * Maximum file size for image uploads (20MB).
-   * @type {number}
-   */
-  MAX_IMAGE_SIZE_MB: 20,
-
-  /**
-   * Maximum file size for audio uploads (20MB).
-   * @type {number}
-   */
-  MAX_AUDIO_SIZE_MB: 20,
-
-  /**
-   * Maximum file size for video uploads (100MB).
-   * @type {number}
-   */
-  MAX_VIDEO_SIZE_MB: 100,
-
-  /**
-   * Supported image MIME types for analysis/editing.
-   * @type {Object.<string, string>}
-   */
-  SUPPORTED_IMAGE_MIMES: {
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.webp': 'image/webp',
-    '.heic': 'image/heic',
-    '.heif': 'image/heif',
-    '.bmp': 'image/bmp',
-    '.gif': 'image/gif',
+  models: {
+    // Text + vision workhorse (Oct 2026 generation)
+    chat: env('GEMINI_CHAT_MODEL', 'gemini-3.7-flash'),
+    // Image generation + conversational editing (Nano Banana 2.1, GA Oct 2026)
+    image: env('GEMINI_IMAGE_MODEL', 'gemini-nano-banana-2.1'),
+    // Highest-quality image generation (Nano Banana Pro)
+    imagePro: env('GEMINI_IMAGE_PRO_MODEL', 'gemini-3-pro-image'),
+    // Video generation
+    video: env('GEMINI_VIDEO_MODEL', 'veo-3.1-generate-001'),
+    videoFast: env('GEMINI_VIDEO_FAST_MODEL', 'veo-3.1-fast-generate-001'),
+    // Text-to-speech
+    tts: env('GEMINI_TTS_MODEL', 'gemini-3.8-flash-tts'),
+    // Embeddings for intent classification
+    embedding: env('GEMINI_EMBEDDING_MODEL', 'gemini-embedding-001'),
   },
 
-  /**
-   * Supported audio MIME types for transcription.
-   * @type {Object.<string, string>}
-   */
-  SUPPORTED_AUDIO_MIMES: {
-    '.mp3': 'audio/mpeg',
-    '.wav': 'audio/wav',
-    '.flac': 'audio/flac',
-    '.aac': 'audio/aac',
-    '.ogg': 'audio/ogg',
-    '.webm': 'audio/webm',
-    '.m4a': 'audio/mp4',
+  limits: {
+    maxImageMb: 20,
+    maxAudioMb: 25,
+    maxVideoMb: 100,
+    maxSessionTurns: 40,
   },
 
-  /**
-   * Supported video MIME types for analysis.
-   * @type {Object.<string, string>}
-   */
-  SUPPORTED_VIDEO_MIMES: {
-    '.mp4': 'video/mp4',
-    '.mov': 'video/quicktime',
-    '.avi': 'video/x-msvideo',
-    '.webm': 'video/webm',
-    '.mkv': 'video/x-matroska',
-    '.flv': 'video/x-flv',
-    '.wmv': 'video/x-ms-wmv',
-    '.m4v': 'video/mp4',
-  },
-
-  /**
-   * Gemini model configurations.
-   */
-  GEMINI_MODELS: {
-    IMAGE_GENERATION: {
-      model: 'gemini-2.0-flash-exp',
-      generationConfig: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
-    },
-    IMAGE_EDITING: {
-      model: 'gemini-2.0-flash-exp',
-      generationConfig: {
-        responseModalities: ['TEXT', 'IMAGE'],
-        temperature: 0.3, // Lower temperature for consistent edits
-      },
-    },
-    CHAT: {
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        temperature: 0.7, // Higher temperature for more conversational responses
-        maxOutputTokens: 2048,
-      },
-    },
-    AUDIO_TRANSCRIPTION: {
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        temperature: 0.1, // Low temperature for accurate transcription
-        maxOutputTokens: 2048,
-      },
-    },
-    CODE_EXECUTION: {
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        temperature: 0.1, // Low temperature for accurate code execution
-        maxOutputTokens: 2048,
-      },
-      tools: [{
-        codeExecution: {}, // Enable code execution sandbox
-      }],
-    },
-    VIDEO_ANALYSIS: {
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        temperature: 0.2, // Low temperature for accurate analysis
-        maxOutputTokens: 2048,
-      },
-    },
-    IMAGE_ANALYSIS: {
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        temperature: 0.2, // Low temperature for accurate analysis
-        maxOutputTokens: 2048,
-      },
-    },
-    ADVANCED_IMAGE_GENERATION: {
-      model: 'gemini-2.0-flash-exp',
-      generationConfig: {
-        responseModalities: ['TEXT', 'IMAGE'],
-        temperature: 0.4, // Balanced for creative consistency
-        maxOutputTokens: 2048,
-      },
-    },
-  },
-
-  /**
-   * OpenRouter model configurations.
-   */
-  OPENROUTER_MODELS: {
-    // Nano Banana - Gemini 2.5 Flash Image (GA)
-    ADVANCED_IMAGE_GENERATION: {
-      model: 'google/gemini-2.5-flash-image',
-      generationConfig: {
-        temperature: 0.4,
-        max_tokens: 2048,
-      },
-      // OpenRouter specific settings
-      modalities: ['image', 'text'],
-      supports_image_generation: true,
-    },
-    // Nano Banana Pro - Gemini 3 Pro Image (most advanced)
-    NANO_BANANA_PRO: {
-      model: 'google/gemini-3-pro-image-preview',
-      generationConfig: {
-        temperature: 0.4,
-        max_tokens: 4096,
-      },
-      // OpenRouter specific settings
-      modalities: ['image', 'text'],
-      supports_image_generation: true,
-      // Nano Banana Pro specific capabilities
-      max_reference_images: 14,
-      supported_resolutions: ['1k', '2k', '4k'],
-      supported_aspect_ratios: ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'],
-    },
+  learning: {
+    /** Interactions with a rating before the distiller runs. */
+    distillAfterRated: 10,
+    /** Use embedding similarity for intent detection when keywords miss. */
+    embeddingIntents: env('LEARNING_EMBEDDING_INTENTS', 'true').toLowerCase() === 'true',
   },
 };
 
-// Legacy support - map old TOOL_PREFERENCES_FILE to new internal location
-// This is for any code that might still reference the old config key
-Object.defineProperty(config, 'TOOL_PREFERENCES_FILE', {
-  get() {
-    const { log } = require('./utils/logger');
-    log('Warning: TOOL_PREFERENCES_FILE is deprecated. Use internal PreferencesManager instead.', 'config');
-    return path.join(config.DATA_DIR, 'tool-preferences.json');
-  },
-});
+export function maskKey(key) {
+  if (!key) return '(missing)';
+  if (key.length <= 8) return '****';
+  return `${key.slice(0, 4)}…${key.slice(-4)}`;
+}
 
-module.exports = config;
+export function assertConfigured() {
+  if (!config.apiKey) {
+    throw new Error(
+      'GEMINI_API_KEY is not set. Copy .env.example to .env and add your key from https://aistudio.google.com/apikey'
+    );
+  }
+}

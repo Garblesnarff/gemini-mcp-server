@@ -1,50 +1,45 @@
 {
-  "name": "gemini-mcp-server",
-  "version": "2.2.0",
-  "description": "A comprehensive MCP server for Google Gemini AI with Smart Tool Intelligence and self-contained preferences",
-  "main": "gemini-server.js",
-  "scripts": {
-    "start": "node gemini-server.js",
-    "dev": "DEBUG=true node gemini-server.js",
-    "test": "node test-tool-intelligence-full.js",
-    "migrate": "node scripts/migrate-preferences.js",
-    "clean": "node scripts/clean-data.js",
-    "inspect": "node scripts/inspect-preferences.js",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+  "author": "Rob Hanson",
+  "bin": {
+    "gemini-mcp": "bin/gemini-mcp.js"
   },
+  "bugs": {
+    "url": "https://github.com/Garblesnarff/gemini-mcp-server/issues"
+  },
+  "dependencies": {
+    "@google/genai": "^2.30.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "express": "^5.1.0",
+    "zod": "^4.6.7"
+  },
+  "description": "A Model Context Protocol (MCP) server for Google's Gemini AI — chat, Nano Banana image gen/editing, Veo video, TTS, analysis, search grounding, and a learning system that distills real user preferences from feedback.",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "homepage": "https://github.com/Garblesnarff/gemini-mcp-server#readme",
   "keywords": [
     "mcp",
     "gemini",
     "ai",
-    "tool-intelligence",
-    "image-generation",
-    "chat",
-    "transcription",
-    "code-execution",
-    "image-editing",
-    "video-analysis",
-    "image-analysis"
+    "model-context-protocol",
+    "nano-banana",
+    "veo",
+    "text-to-speech",
+    "learning"
   ],
-  "author": "Rob with Cline + Gemini 2.5 Pro + Claude",
   "license": "MIT",
-  "dependencies": {
-    "@google/generative-ai": "^0.21.0"
-  },
-  "devDependencies": {
-    "eslint": "^8.57.1",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.32.0"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
+  "main": "src/server.js",
+  "name": "gemini-mcp-server",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-repo/gemini-mcp-server.git"
+    "url": "https://github.com/Garblesnarff/gemini-mcp-server.git"
   },
-  "homepage": "https://github.com/your-repo/gemini-mcp-server#readme",
-  "bugs": {
-    "url": "https://github.com/your-repo/gemini-mcp-server/issues"
-  }
+  "scripts": {
+    "dev": "DEBUG=true node bin/gemini-mcp.js",
+    "start": "node bin/gemini-mcp.js",
+    "start:http": "node bin/gemini-mcp.js --http",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "type": "module",
+  "version": "3.0.0"
 }

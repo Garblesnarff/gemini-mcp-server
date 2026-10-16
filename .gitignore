@@ -1,38 +1,6 @@
-# Node modules
 node_modules/
-
-# Environment files
 .env
-.env.local
-
-# IDE
-.vscode/
-.idea/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
+data/
+output/
 *.log
-npm-debug.log*
-
-# Data directory - ignore everything except .gitkeep
-data/*
-!data/.gitkeep
-
-# Backup files
-*.backup
-*.bak
-*-backup-*
-
-# Test output
-test-output/
-coverage/
-
-# Configuration files with secrets - NEVER commit these!
-gemini_config.json
-claude_config.json
-*_config.json
-*.sh
-
+.DS_Store
